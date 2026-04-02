@@ -9,19 +9,43 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post("/generate", async (req, res) => {
-  const { bahan } = req.body;
+// ✅ test route (optional)
+app.get("/", (req, res) => {
+  res.send("MasakApa Backend Running 🚀");
+});
 
-  const prompt = `
-Anda chef Malaysia.
+// ✅ main AI route
+app.post("/generate", async (req, res) => {
+  try {
+    const { bahan } = req.body;
+
+    // check input
+    if (!bahan || bahan.length === 0) {
+      return res.json({
+        result: "Sila pilih bahan dulu 🙂"
+      });
+    }
+
+    const prompt = `
+Anda adalah chef profesional Malaysia.
 
 Bahan:
 ${bahan.join(", ")}
 
-Bagi 3 resepi lengkap dalam Bahasa Melayu.
+Cadangkan 3 resepi lengkap.
+
+Format:
+Nama Resepi:
+Masa:
+Tahap:
+Bahan:
+Cara Memasak:
+Tips:
+
+Gunakan Bahasa Melayu.
+Pastikan resepi realistik dan sedap.
 `;
 
-  try {
     const response = await fetch(
       "https://api.openai.com/v1/chat/completions",
       {
@@ -32,37 +56,46 @@ Bagi 3 resepi lengkap dalam Bahasa Melayu.
         },
         body: JSON.stringify({
           model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: prompt }],
+          messages: [
+            { role: "user", content: prompt }
+          ],
         }),
       }
     );
 
     const data = await response.json();
 
+    // ✅ DEBUG (lihat kat Render log)
+    console.log("AI RESPONSE:", JSON.stringify(data, null, 2));
+
+    // ❌ kalau error dari OpenAI
+    if (!data.choices || !data.choices[0]) {
+      return res.json({
+        result: "AI tak dapat generate resepi 😢",
+        error: data
+      });
+    }
+
+    // ✅ success
+    const result = data.choices[0].message.content;
+
     res.json({
-      result: data.choices[0].message.content,
+      result: result
     });
 
-  } catch (err) {
-    res.json({ error: "Error AI" });
+  } catch (error) {
+    console.error("SERVER ERROR:", error);
+
+    res.json({
+      result: "Server error 😢",
+      error: error.message
+    });
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server running");
-});
+// start server
+const PORT = process.env.PORT || 3000;
 
-const data = await response.json();
-
-console.log("AI RESPONSE:", data); // tambah ini
-
-if (!data.choices) {
-  return res.json({
-    result: "Error dari AI 😢",
-    debug: data
-  });
-}
-
-res.json({
-  result: data.choices[0].message.content,
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
