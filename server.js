@@ -55,7 +55,7 @@ Pastikan resepi realistik dan sedap.
           "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-4.1-mini",
+          model: "gpt-40-mini",
           messages: [
             { role: "user", content: prompt }
           ],
