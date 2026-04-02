@@ -51,3 +51,18 @@ Bagi 3 resepi lengkap dalam Bahasa Melayu.
 app.listen(3000, () => {
   console.log("Server running");
 });
+
+const data = await response.json();
+
+console.log("AI RESPONSE:", data); // tambah ini
+
+if (!data.choices) {
+  return res.json({
+    result: "Error dari AI 😢",
+    debug: data
+  });
+}
+
+res.json({
+  result: data.choices[0].message.content,
+});
